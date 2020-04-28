@@ -8,7 +8,7 @@ import (
 )
 
 func FormatTable(writer io.Writer, resources []Resource) {
-	data := [][]string{}
+	tableData := [][]string{}
 	hourlyTotal := 0.0
 	monthlyTotal := 0.0
 
@@ -18,7 +18,7 @@ func FormatTable(writer io.Writer, resources []Resource) {
 		hourlyTotal += hourlyCost
 		monthlyTotal += monthlyCost
 
-		data = append(data, []string{
+		tableData = append(tableData, []string{
 			res.Type,
 			res.Name,
 			res.ServiceCode,
@@ -48,6 +48,6 @@ func FormatTable(writer io.Writer, resources []Resource) {
 	table.SetAlignment(tablewriter.ALIGN_RIGHT)
 	table.SetFooterAlignment(tablewriter.ALIGN_RIGHT)
 	table.SetBorder(false)
-	table.AppendBulk(data)
+	table.AppendBulk(tableData)
 	table.Render()
 }

@@ -95,7 +95,7 @@ func Calculate(tfPlan *PlanJSON) ([]Resource, error) {
 
 			}
 		default:
-			return nil, fmt.Errorf("resource type not recognized: %", res.Type)
+			return nil, fmt.Errorf("resource type not recognized: %s", res.Type)
 		}
 	}
 
