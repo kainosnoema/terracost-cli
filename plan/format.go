@@ -22,8 +22,8 @@ func FormatTable(writer io.Writer, resources []Resource) {
 		tableData = append(tableData, []string{
 			res.Type,
 			res.Name,
-			res.ServiceCode,
-			res.UsageOperation,
+			res.Price.ServiceCode,
+			res.Price.UsageOperation,
 			"$" + strconv.FormatFloat(hourlyCost, 'f', 3, 32),
 			"$" + strconv.FormatFloat(monthlyCost, 'f', 2, 32),
 		})

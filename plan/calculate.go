@@ -17,13 +17,11 @@ var regionMap = map[string]string{
 	"us-west-2": "USW2",
 }
 
-// Resource maps a Terraform resource to an AWS service, usage, and pricing
+// Resource maps a Terraform resource to AWS pricing
 type Resource struct {
-	Type           string
-	Name           string
-	ServiceCode    string
-	UsageOperation string
-	Price          Price
+	Type  string
+	Name  string
+	Price Price
 }
 
 // Price represents AWS pricing information
@@ -82,16 +80,20 @@ func Calculate(tfPlan *PlanJSON) ([]Resource, error) {
 					res.Change.After["instance_type"].(string),
 					imageUsageOperation(region, res.Change.After["ami"].(string)),
 				)
+
+				priceQuery := priceQuery{
+					ServiceCode:    "AmazonEC2",
+					UsageOperation: usageOperation,
+				}
+				prices[priceQuery] = Price{
+					ServiceCode:    priceQuery.ServiceCode,
+					UsageOperation: priceQuery.UsageOperation,
+				}
 				resources = append(resources, Resource{
-					Type:           res.Type,
-					Name:           res.Name,
-					ServiceCode:    "AmazonEC2",
-					UsageOperation: usageOperation,
+					Type:  res.Type,
+					Name:  res.Name,
+					Price: prices[priceQuery],
 				})
-				prices[priceQuery{
-					ServiceCode:    "AmazonEC2",
-					UsageOperation: usageOperation,
-				}] = Price{}
 			} else if res.Change.After == nil { // deleting
 
 			} else { // updating
@@ -125,8 +127,8 @@ func Calculate(tfPlan *PlanJSON) ([]Resource, error) {
 
 	for k, resource := range resources {
 		resource.Price = prices[priceQuery{
-			ServiceCode:    resource.ServiceCode,
-			UsageOperation: resource.UsageOperation,
+			ServiceCode:    resource.Price.ServiceCode,
+			UsageOperation: resource.Price.UsageOperation,
 		}]
 		resources[k] = resource
 	}
