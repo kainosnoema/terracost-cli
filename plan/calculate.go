@@ -17,6 +17,7 @@ var regionMap = map[string]string{
 	"us-west-2": "USW2",
 }
 
+// Resource maps a Terraform resource to an AWS service, usage, and pricing
 type Resource struct {
 	Type           string
 	Name           string
@@ -25,6 +26,7 @@ type Resource struct {
 	Price          Price
 }
 
+// Price represents AWS pricing information
 type Price struct {
 	ServiceCode    string
 	UsageOperation string
@@ -64,6 +66,7 @@ type priceResponse struct {
 	Prices []Price
 }
 
+// Calculate takes a TF plan, fetches AWS prices, and returns priced Resources
 func Calculate(tfPlan *PlanJSON) ([]Resource, error) {
 	region := tfPlan.Configuration.ProviderConfig.AWS.Expressions.Region.ConstantValue
 	resources := []Resource{}

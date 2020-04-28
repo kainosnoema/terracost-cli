@@ -7,6 +7,7 @@ import (
 	"os/exec"
 )
 
+// ExecTerraform runs `terraform plan` in the current directory and saves the JSON output
 func ExecTerraform() (*PlanJSON, error) {
 	planFile, err := ioutil.TempFile("", "tc-plan")
 	if err != nil {

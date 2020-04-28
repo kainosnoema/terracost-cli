@@ -7,6 +7,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
+// FormatTable takes an io.Writer (such as os.Stdout) and writes a nicely formatted cost table
 func FormatTable(writer io.Writer, resources []Resource) {
 	tableData := [][]string{}
 	hourlyTotal := 0.0
