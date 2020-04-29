@@ -4,18 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/machinebox/graphql"
-)
 
-var regionMap = map[string]string{
-	"us-east-1": "USE1",
-	"us-east-2": "USE2",
-	"us-west-1": "USW1",
-	"us-west-2": "USW2",
-}
+	"github.com/kainosnoema/terracost/cli/plan/mappings"
+)
 
 // Resource maps a Terraform resource to AWS pricing
 type Resource struct {
@@ -71,37 +63,45 @@ func Calculate(tfPlan *PlanJSON) ([]Resource, error) {
 	prices := map[priceQuery]Price{}
 
 	for _, res := range tfPlan.ResourceChanges {
+		var serviceCode string
+		var usageOperation string
+
 		switch res.Type {
 		case "aws_instance":
 			if res.Change.Before == nil { // creating
-				usageOperation := fmt.Sprintf(
-					"%s-BoxUsage:%s:%s",
-					regionMap[region],
-					res.Change.After["instance_type"].(string),
-					imageUsageOperation(region, res.Change.After["ami"].(string)),
-				)
+				serviceCode = "AmazonEC2"
+				usageOperation = mappings.EC2Instance(region, res.Change.After)
+			} else if res.Change.After == nil { // deleting
 
-				priceQuery := priceQuery{
-					ServiceCode:    "AmazonEC2",
-					UsageOperation: usageOperation,
-				}
-				prices[priceQuery] = Price{
-					ServiceCode:    priceQuery.ServiceCode,
-					UsageOperation: priceQuery.UsageOperation,
-				}
-				resources = append(resources, Resource{
-					Type:  res.Type,
-					Name:  res.Name,
-					Price: prices[priceQuery],
-				})
+			} else { // updating
+
+			}
+		case "aws_db_instance":
+			if res.Change.Before == nil { // creating
+				serviceCode = "AmazonRDS"
+				usageOperation = mappings.RDSInstance(region, res.Change.After)
 			} else if res.Change.After == nil { // deleting
 
 			} else { // updating
 
 			}
 		default:
-			return nil, fmt.Errorf("resource type not recognized: %s", res.Type)
+			return nil, fmt.Errorf("resource type not supported: %s", res.Type)
 		}
+
+		priceQuery := priceQuery{
+			ServiceCode:    serviceCode,
+			UsageOperation: usageOperation,
+		}
+		prices[priceQuery] = Price{
+			ServiceCode:    priceQuery.ServiceCode,
+			UsageOperation: priceQuery.UsageOperation,
+		}
+		resources = append(resources, Resource{
+			Type:  res.Type,
+			Name:  res.Name,
+			Price: prices[priceQuery],
+		})
 	}
 
 	var lookup []priceQuery
@@ -134,25 +134,4 @@ func Calculate(tfPlan *PlanJSON) ([]Resource, error) {
 	}
 
 	return resources, nil
-}
-
-func imageUsageOperation(region, ami string) string {
-	svc := ec2.New(session.New(&aws.Config{Region: &region}))
-	input := &ec2.DescribeImagesInput{
-		ImageIds: []*string{
-			aws.String(ami),
-		},
-	}
-
-	result, err := svc.DescribeImages(input)
-	if err != nil {
-		fmt.Println(err.Error())
-		return "RunInstances"
-	}
-
-	for _, img := range result.Images {
-		return aws.StringValue(img.UsageOperation)
-	}
-
-	return "RunInstances"
 }
