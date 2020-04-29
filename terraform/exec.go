@@ -1,16 +1,14 @@
-package plan
+package terraform
 
 import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
 	"os/exec"
-
-	"github.com/kainosnoema/terracost/cli/terraform"
 )
 
-// ExecTerraform runs `terraform plan` in the current directory and saves the JSON output
-func ExecTerraform() (*terraform.PlanJSON, error) {
+// ExecPlan runs `terraform plan` in the current directory and saves the JSON output
+func ExecPlan() (*PlanJSON, error) {
 	planFile, err := ioutil.TempFile("", "tc-plan")
 	if err != nil {
 		return nil, err
@@ -31,7 +29,7 @@ func ExecTerraform() (*terraform.PlanJSON, error) {
 		return nil, err
 	}
 
-	var tfPlan terraform.PlanJSON
+	var tfPlan PlanJSON
 	err = json.Unmarshal(out, &tfPlan)
 	if err != nil {
 		return nil, err

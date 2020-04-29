@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/kainosnoema/terracost/cli/plan"
+	"github.com/kainosnoema/terracost/cli/terraform"
 )
 
 func init() {
@@ -22,7 +23,7 @@ var planCmd = &cobra.Command{
 
 func runPlan(cmd *cobra.Command, args []string) {
 	fmt.Println("Planning...")
-	tfPlan, err := plan.ExecTerraform()
+	tfPlan, err := terraform.ExecPlan()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error running Terraform:", err.Error())
 		return
