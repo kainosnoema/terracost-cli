@@ -1,7 +1,6 @@
-package mapping
+package prices
 
 import (
-	"github.com/kainosnoema/terracost/cli/prices"
 	"github.com/kainosnoema/terracost/cli/terraform"
 )
 
@@ -36,8 +35,8 @@ var regionMap = map[string]string{
 	"us-west-2":      "USW2",
 }
 
-func Resource(region string, res terraform.ResourceChangeJSON) []prices.PriceQuery {
-	priceQueries := []prices.PriceQuery{}
+func Resource(region string, res terraform.ResourceChangeJSON) []PriceQuery {
+	priceQueries := []PriceQuery{}
 
 	switch res.Type {
 	case "aws_instance":

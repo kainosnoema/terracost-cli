@@ -1,7 +1,6 @@
 package plan
 
 import (
-	"github.com/kainosnoema/terracost/cli/mapping"
 	"github.com/kainosnoema/terracost/cli/prices"
 	"github.com/kainosnoema/terracost/cli/terraform"
 )
@@ -26,7 +25,7 @@ func Calculate(tfPlan *terraform.PlanJSON) ([]Resource, error) {
 			Prices: map[prices.PriceQuery]prices.Price{},
 		}
 
-		for _, priceQuery := range mapping.Resource(region, res) {
+		for _, priceQuery := range prices.Resource(region, res) {
 			emptyPrice := prices.Price{
 				ServiceCode:    priceQuery.ServiceCode,
 				UsageOperation: priceQuery.UsageOperation,

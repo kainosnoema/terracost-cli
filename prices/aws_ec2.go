@@ -1,4 +1,4 @@
-package mapping
+package prices
 
 import (
 	"fmt"
@@ -6,17 +6,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/kainosnoema/terracost/cli/prices"
 )
 
-func EC2Instance(region string, changeAttrs map[string]interface{}) []prices.PriceQuery {
+func EC2Instance(region string, changeAttrs map[string]interface{}) []PriceQuery {
 	ec2UsageOperation := fmt.Sprintf("%s-BoxUsage:%s:%s",
 		regionMap[region],
 		changeAttrs["instance_type"].(string),
 		imageUsageOperation(region, changeAttrs["ami"].(string)),
 	)
 
-	return []prices.PriceQuery{{
+	return []PriceQuery{{
 		ServiceCode:    "AmazonEC2",
 		UsageOperation: ec2UsageOperation,
 	}}
