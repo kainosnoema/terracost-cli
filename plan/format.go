@@ -14,31 +14,33 @@ func FormatTable(writer io.Writer, resources []Resource) {
 	monthlyTotal := 0.0
 
 	for _, res := range resources {
-		if len(res.Prices[0].Dimensions) == 0 {
+		if len(res.Prices) == 0 { // unable to find prices
 			tableData = append(tableData, []string{
 				res.Type,
 				res.Name,
-				res.Prices[0].ServiceCode,
-				res.Prices[0].UsageOperation,
-				"(unknown)",
-				"(unknown)",
+				"?",
+				"?",
+				"?",
+				"?",
 			})
 			continue
 		}
 
-		hourlyCost, _ := strconv.ParseFloat(res.Prices[0].Dimensions[0].PricePerUnit, 32)
-		monthlyCost := hourlyCost * 730
-		hourlyTotal += hourlyCost
-		monthlyTotal += monthlyCost
+		for _, price := range res.Prices {
+			hourlyCost, _ := strconv.ParseFloat(price.Dimensions[0].PricePerUnit, 32)
+			monthlyCost := hourlyCost * 730
+			hourlyTotal += hourlyCost
+			monthlyTotal += monthlyCost
 
-		tableData = append(tableData, []string{
-			res.Type,
-			res.Name,
-			res.Prices[0].ServiceCode,
-			res.Prices[0].UsageOperation,
-			"$" + strconv.FormatFloat(hourlyCost, 'f', 3, 32),
-			"$" + strconv.FormatFloat(monthlyCost, 'f', 2, 32),
-		})
+			tableData = append(tableData, []string{
+				res.Type,
+				res.Name,
+				price.ServiceCode,
+				price.UsageOperation,
+				"$" + strconv.FormatFloat(hourlyCost, 'f', 3, 32),
+				"$" + strconv.FormatFloat(monthlyCost, 'f', 2, 32),
+			})
+		}
 	}
 
 	table := tablewriter.NewWriter(writer)
@@ -61,6 +63,7 @@ func FormatTable(writer io.Writer, resources []Resource) {
 	table.SetAlignment(tablewriter.ALIGN_RIGHT)
 	table.SetFooterAlignment(tablewriter.ALIGN_RIGHT)
 	table.SetBorder(false)
+	table.SetAutoMergeCellsByColumnIndex([]int{0, 1})
 	table.AppendBulk(tableData)
 	table.Render()
 }
