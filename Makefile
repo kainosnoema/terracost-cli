@@ -10,6 +10,6 @@ clean:
 	@rm $(BIN)
 
 test:
-  	@go test -v ./...
+	@go test -v ./...
 
-.PHONY: clean
+.PHONY: clean test
