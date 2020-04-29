@@ -11,19 +11,13 @@ func Resource(region string, res terraform.ResourceChangeJSON) []prices.PriceQue
 	switch res.Type {
 	case "aws_instance":
 		if res.Change.Before == nil { // creating
-			priceQueries = append(priceQueries, prices.PriceQuery{
-				ServiceCode:    "AmazonEC2",
-				UsageOperation: EC2Instance(region, res.Change.After),
-			})
+			priceQueries = append(priceQueries, EC2Instance(region, res.Change.After)...)
 		} else if res.Change.After == nil { // deleting
 		} else { // updating
 		}
 	case "aws_db_instance":
 		if res.Change.Before == nil { // creating
-			priceQueries = append(priceQueries, prices.PriceQuery{
-				ServiceCode:    "AmazonRDS",
-				UsageOperation: RDSInstance(region, res.Change.After),
-			})
+			priceQueries = append(priceQueries, RDSInstance(region, res.Change.After)...)
 		} else if res.Change.After == nil { // deleting
 		} else { // updating
 		}

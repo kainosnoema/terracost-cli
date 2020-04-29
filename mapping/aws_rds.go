@@ -2,6 +2,8 @@ package mapping
 
 import (
 	"fmt"
+
+	"github.com/kainosnoema/terracost/cli/prices"
 )
 
 var rdsInstanceClassMap = map[string]string{
@@ -59,7 +61,7 @@ var rdsEngineOperationMap = map[string]string{
 	"aurora-postgresql:general-public-license": "CreateDBInstance:0021",
 }
 
-func RDSInstance(region string, changeAttrs map[string]interface{}) string {
+func RDSInstance(region string, changeAttrs map[string]interface{}) []prices.PriceQuery {
 	instanceClass := changeAttrs["instance_class"].(string)
 	if mappedClass, ok := rdsInstanceClassMap[instanceClass]; ok {
 		instanceClass = mappedClass
@@ -73,11 +75,13 @@ func RDSInstance(region string, changeAttrs map[string]interface{}) string {
 	if licenseModel == "" {
 		licenseModel = "general-public-license"
 	}
-	usageOperation := rdsEngineOperationMap[changeAttrs["engine"].(string)+":"+licenseModel]
 
-	return fmt.Sprintf("%s-InstanceUsage:%s:%s",
-		regionMap[region],
-		instanceClass,
-		usageOperation,
-	)
+	return []prices.PriceQuery{{
+		ServiceCode: "AmazonRDS",
+		UsageOperation: fmt.Sprintf("%s-InstanceUsage:%s:%s",
+			regionMap[region],
+			instanceClass,
+			rdsEngineOperationMap[changeAttrs["engine"].(string)+":"+licenseModel],
+		),
+	}}
 }
