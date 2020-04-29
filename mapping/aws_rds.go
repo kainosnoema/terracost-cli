@@ -1,29 +1,8 @@
-package mappings
+package mapping
 
 import (
 	"fmt"
 )
-
-var rdsEngineUsageOperationMap = map[string]string{
-	"mysql:general-public-license":             "CreateDBInstance:0002",
-	"oracle-se1:bring-your-own-license":        "CreateDBInstance:0003",
-	"oracle-se:bring-your-own-license":         "CreateDBInstance:0004",
-	"oracle-ee:bring-your-own-license":         "CreateDBInstance:0005",
-	"oracle-se1:license-included":              "CreateDBInstance:0006",
-	"sqlserver-se:bring-your-own-license":      "CreateDBInstance:0008",
-	"sqlserver-ee:bring-your-own-license":      "CreateDBInstance:0009",
-	"sqlserver-ex:license-included":            "CreateDBInstance:0010",
-	"sqlserver-web:license-included":           "CreateDBInstance:0011",
-	"sqlserver-se:license-included":            "CreateDBInstance:0012",
-	"postgres:general-public-license":          "CreateDBInstance:0014",
-	"sqlserver-ee:license-included":            "CreateDBInstance:0015",
-	"aurora:general-public-license":            "CreateDBInstance:0016",
-	"aurora-mysql:general-public-license":      "CreateDBInstance:0016",
-	"mariadb:general-public-license":           "CreateDBInstance:0018",
-	"oracle-se2:bring-your-own-license":        "CreateDBInstance:0019",
-	"oracle-se2:license-included":              "CreateDBInstance:0020",
-	"aurora-postgresql:general-public-license": "CreateDBInstance:0021",
-}
 
 var rdsInstanceClassMap = map[string]string{
 	"db.m4.10xlarge":  "db.m4.10xl",
@@ -59,6 +38,27 @@ var rdsInstanceClassMap = map[string]string{
 	"db.z1d.12xlarge": "db.z1d.12xl",
 }
 
+var rdsEngineOperationMap = map[string]string{
+	"mysql:general-public-license":             "CreateDBInstance:0002",
+	"oracle-se1:bring-your-own-license":        "CreateDBInstance:0003",
+	"oracle-se:bring-your-own-license":         "CreateDBInstance:0004",
+	"oracle-ee:bring-your-own-license":         "CreateDBInstance:0005",
+	"oracle-se1:license-included":              "CreateDBInstance:0006",
+	"sqlserver-se:bring-your-own-license":      "CreateDBInstance:0008",
+	"sqlserver-ee:bring-your-own-license":      "CreateDBInstance:0009",
+	"sqlserver-ex:license-included":            "CreateDBInstance:0010",
+	"sqlserver-web:license-included":           "CreateDBInstance:0011",
+	"sqlserver-se:license-included":            "CreateDBInstance:0012",
+	"postgres:general-public-license":          "CreateDBInstance:0014",
+	"sqlserver-ee:license-included":            "CreateDBInstance:0015",
+	"aurora:general-public-license":            "CreateDBInstance:0016",
+	"aurora-mysql:general-public-license":      "CreateDBInstance:0016",
+	"mariadb:general-public-license":           "CreateDBInstance:0018",
+	"oracle-se2:bring-your-own-license":        "CreateDBInstance:0019",
+	"oracle-se2:license-included":              "CreateDBInstance:0020",
+	"aurora-postgresql:general-public-license": "CreateDBInstance:0021",
+}
+
 func RDSInstance(region string, changeAttrs map[string]interface{}) string {
 	instanceClass := changeAttrs["instance_class"].(string)
 	if mappedClass, ok := rdsInstanceClassMap[instanceClass]; ok {
@@ -73,10 +73,9 @@ func RDSInstance(region string, changeAttrs map[string]interface{}) string {
 	if licenseModel == "" {
 		licenseModel = "general-public-license"
 	}
-	usageOperation := rdsEngineUsageOperationMap[changeAttrs["engine"].(string)+":"+licenseModel]
+	usageOperation := rdsEngineOperationMap[changeAttrs["engine"].(string)+":"+licenseModel]
 
-	return fmt.Sprintf(
-		"%s-InstanceUsage:%s:%s",
+	return fmt.Sprintf("%s-InstanceUsage:%s:%s",
 		regionMap[region],
 		instanceClass,
 		usageOperation,

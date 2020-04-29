@@ -1,66 +1,24 @@
 package plan
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/machinebox/graphql"
-
-	"github.com/kainosnoema/terracost/cli/plan/mappings"
+	"github.com/kainosnoema/terracost/cli/mapping"
+	"github.com/kainosnoema/terracost/cli/prices"
 )
 
 // Resource maps a Terraform resource to AWS pricing
 type Resource struct {
-	Type  string
-	Name  string
-	Price Price
-}
-
-// Price represents AWS pricing information
-type Price struct {
-	ServiceCode    string
-	UsageOperation string
-	Dimensions     []dimension
-	Updated        string
-}
-
-type dimension struct {
-	BeginRange   string
-	EndRange     string
-	PricePerUnit string
-	Unit         string
-	RateCode     string
-	Description  string
-}
-
-var priceQueryGql = `query ($lookup: [PriceQuery!]) {
-	Prices(lookup: $lookup) {
-		ServiceCode
-		UsageOperation
-		Dimensions {
-			BeginRange
-			EndRange
-			Unit
-			PricePerUnit
-			Description
-		}
-	}
-}`
-
-type priceQuery struct {
-	ServiceCode    string
-	UsageOperation string
-}
-
-type priceResponse struct {
-	Prices []Price
+	Type   string
+	Name   string
+	Prices []prices.Price
 }
 
 // Calculate takes a TF plan, fetches AWS prices, and returns priced Resources
 func Calculate(tfPlan *PlanJSON) ([]Resource, error) {
-	region := tfPlan.Configuration.ProviderConfig.AWS.Expressions.Region.ConstantValue
+	region := tfPlan.Region()
 	resources := []Resource{}
-	prices := map[priceQuery]Price{}
+	priceQueries := map[prices.PriceQuery]prices.Price{}
 
 	for _, res := range tfPlan.ResourceChanges {
 		var serviceCode string
@@ -70,7 +28,7 @@ func Calculate(tfPlan *PlanJSON) ([]Resource, error) {
 		case "aws_instance":
 			if res.Change.Before == nil { // creating
 				serviceCode = "AmazonEC2"
-				usageOperation = mappings.EC2Instance(region, res.Change.After)
+				usageOperation = mapping.EC2Instance(region, res.Change.After)
 			} else if res.Change.After == nil { // deleting
 
 			} else { // updating
@@ -79,7 +37,7 @@ func Calculate(tfPlan *PlanJSON) ([]Resource, error) {
 		case "aws_db_instance":
 			if res.Change.Before == nil { // creating
 				serviceCode = "AmazonRDS"
-				usageOperation = mappings.RDSInstance(region, res.Change.After)
+				usageOperation = mapping.RDSInstance(region, res.Change.After)
 			} else if res.Change.After == nil { // deleting
 
 			} else { // updating
@@ -89,47 +47,43 @@ func Calculate(tfPlan *PlanJSON) ([]Resource, error) {
 			return nil, fmt.Errorf("resource type not supported: %s", res.Type)
 		}
 
-		priceQuery := priceQuery{
+		priceQuery := prices.PriceQuery{
 			ServiceCode:    serviceCode,
 			UsageOperation: usageOperation,
 		}
-		prices[priceQuery] = Price{
+		priceQueries[priceQuery] = prices.Price{
 			ServiceCode:    priceQuery.ServiceCode,
 			UsageOperation: priceQuery.UsageOperation,
 		}
 		resources = append(resources, Resource{
-			Type:  res.Type,
-			Name:  res.Name,
-			Price: prices[priceQuery],
+			Type:   res.Type,
+			Name:   res.Name,
+			Prices: []prices.Price{priceQueries[priceQuery]},
 		})
 	}
 
-	var lookup []priceQuery
-	for q := range prices {
+	var lookup []prices.PriceQuery
+	for q := range priceQueries {
 		lookup = append(lookup, q)
 	}
 
-	req := graphql.NewRequest(priceQueryGql)
-	req.Var("lookup", lookup)
-
-	var res priceResponse
-	client := graphql.NewClient("http://localhost:3000/api/graphql")
-	if err := client.Run(context.Background(), req, &res); err != nil {
+	priceRes, err := prices.Lookup(lookup)
+	if err != nil {
 		return nil, err
 	}
 
-	for _, price := range res.Prices {
-		prices[priceQuery{
+	for _, price := range priceRes {
+		priceQueries[prices.PriceQuery{
 			ServiceCode:    price.ServiceCode,
 			UsageOperation: price.UsageOperation,
 		}] = price
 	}
 
 	for k, resource := range resources {
-		resource.Price = prices[priceQuery{
-			ServiceCode:    resource.Price.ServiceCode,
-			UsageOperation: resource.Price.UsageOperation,
-		}]
+		resource.Prices = []prices.Price{priceQueries[prices.PriceQuery{
+			ServiceCode:    resource.Prices[0].ServiceCode,
+			UsageOperation: resource.Prices[0].UsageOperation,
+		}]}
 		resources[k] = resource
 	}
 

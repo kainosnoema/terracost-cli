@@ -1,4 +1,4 @@
-package mappings
+package mapping
 
 // Difficult to compile an accurate list as there's no complete documentation.
 // Example: https://docs.aws.amazon.com/AmazonS3/latest/dev/aws-usage-report-understand.html

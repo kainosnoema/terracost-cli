@@ -14,19 +14,19 @@ func FormatTable(writer io.Writer, resources []Resource) {
 	monthlyTotal := 0.0
 
 	for _, res := range resources {
-		if len(res.Price.Dimensions) == 0 {
+		if len(res.Prices[0].Dimensions) == 0 {
 			tableData = append(tableData, []string{
 				res.Type,
 				res.Name,
-				res.Price.ServiceCode,
-				res.Price.UsageOperation,
+				res.Prices[0].ServiceCode,
+				res.Prices[0].UsageOperation,
 				"(unknown)",
 				"(unknown)",
 			})
 			continue
 		}
 
-		hourlyCost, _ := strconv.ParseFloat(res.Price.Dimensions[0].PricePerUnit, 32)
+		hourlyCost, _ := strconv.ParseFloat(res.Prices[0].Dimensions[0].PricePerUnit, 32)
 		monthlyCost := hourlyCost * 730
 		hourlyTotal += hourlyCost
 		monthlyTotal += monthlyCost
@@ -34,8 +34,8 @@ func FormatTable(writer io.Writer, resources []Resource) {
 		tableData = append(tableData, []string{
 			res.Type,
 			res.Name,
-			res.Price.ServiceCode,
-			res.Price.UsageOperation,
+			res.Prices[0].ServiceCode,
+			res.Prices[0].UsageOperation,
 			"$" + strconv.FormatFloat(hourlyCost, 'f', 3, 32),
 			"$" + strconv.FormatFloat(monthlyCost, 'f', 2, 32),
 		})
