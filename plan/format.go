@@ -57,7 +57,7 @@ func FormatTable(writer io.Writer, resources []Resource) {
 	table := tablewriter.NewWriter(writer)
 	table.SetHeader([]string{
 		"Resource",
-		"Usage Operation",
+		"Usage",
 		"Hourly",
 		"Monthly",
 		"Monthly Delta",
