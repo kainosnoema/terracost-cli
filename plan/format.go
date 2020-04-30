@@ -12,7 +12,10 @@ import (
 	"github.com/kainosnoema/terracost/cli/prices"
 )
 
-var money = &accounting.Accounting{
+var money2 = &accounting.Accounting{
+	Symbol: "$", Precision: 2, Format: "%s%v", FormatZero: "-",
+}
+var money3 = &accounting.Accounting{
 	Symbol: "$", Precision: 3, Format: "%s%v", FormatZero: "-",
 }
 
@@ -63,9 +66,9 @@ func FormatTable(writer io.Writer, resources []Resource) {
 	table.SetFooter([]string{
 		"",
 		"Total",
-		money.FormatMoney(pricing.hourlyTotal),
-		money.FormatMoney(pricing.monthlyTotal),
-		money.FormatMoney(pricing.monthlyTotalDelta),
+		money3.FormatMoney(pricing.hourlyTotal),
+		money2.FormatMoney(pricing.monthlyTotal),
+		money2.FormatMoney(pricing.monthlyTotalDelta),
 	})
 	table.SetFooterAlignment(tablewriter.ALIGN_RIGHT)
 	table.SetBorder(false)
@@ -106,8 +109,8 @@ func addTableRow(pricing *pricingTable, res Resource, priceID prices.PriceID) {
 	pricing.tableData = append(pricing.tableData, []string{
 		formatAddress(res),
 		formatDescription(beforePrice, price),
-		money.FormatMoney(hourlyAfter),
-		money.FormatMoney(monthlyAfter),
+		money3.FormatMoney(hourlyAfter),
+		money2.FormatMoney(monthlyAfter),
 		formatDelta(monthlyDelta),
 	})
 }
@@ -128,7 +131,7 @@ func formatAddress(res Resource) string {
 }
 
 func formatDelta(delta float64) string {
-	formattedDelta := money.FormatMoney(delta)
+	formattedDelta := money2.FormatMoney(delta)
 	// return formattedDelta
 	if delta > 0 {
 		formattedDelta = colorstring.Color("[light_red]" + formattedDelta)
