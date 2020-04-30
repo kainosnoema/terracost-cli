@@ -11,20 +11,18 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(planCmd)
+	rootCmd.AddCommand(estimateCmd)
 }
 
-var planCmd = &cobra.Command{
-	Use:   "plan [planfile]",
-	Short: "Plan and calculate costs for a Terraform project or plan file",
+var estimateCmd = &cobra.Command{
+	Use:   "estimate [planfile]",
+	Short: "Plan and estimate costs for a Terraform project or plan file",
 	Long:  "",
 	Args:  cobra.RangeArgs(0, 1),
-	Run:   runPlan,
+	Run:   runEstimate,
 }
 
-func runPlan(cmd *cobra.Command, args []string) {
-	fmt.Println("Planning...")
-
+func runEstimate(cmd *cobra.Command, args []string) {
 	var tfPlan *terraform.PlanJSON
 	var err error
 
@@ -35,6 +33,7 @@ func runPlan(cmd *cobra.Command, args []string) {
 			return
 		}
 	} else {
+		fmt.Println("Planning...")
 		tfPlan, err = terraform.ExecPlan()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Error running Terraform:", err.Error())
@@ -42,10 +41,10 @@ func runPlan(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	fmt.Println("Calculating...")
+	fmt.Println("Estimating...")
 	resources, err := plan.Calculate(tfPlan)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error calculating:", err.Error())
+		fmt.Fprintln(os.Stderr, "Error estimating:", err.Error())
 		return
 	}
 
