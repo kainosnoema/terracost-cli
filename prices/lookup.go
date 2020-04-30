@@ -74,6 +74,10 @@ func (pl *lookup) Add(id PriceID) *Price {
 
 // Perform hits the Terracost API with the list of PriceIDs and populates the prices
 func (pl *lookup) Perform() error {
+	if len(pl.prices) == 0 {
+		return nil
+	}
+
 	lookupIDs := []PriceID{}
 	for q := range pl.prices {
 		lookupIDs = append(lookupIDs, q)
