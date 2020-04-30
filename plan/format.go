@@ -80,7 +80,7 @@ func FormatTable(writer io.Writer, resources []Resource) {
 		"Total",
 		money3.FormatMoney(pricing.hourlyTotal) + "/hr",
 		money2.FormatMoney(pricing.monthlyTotal) + "/mo",
-		money2.FormatMoney(pricing.monthlyTotalDelta) + "/mo",
+		formatDelta(pricing.monthlyTotalDelta) + "/mo",
 	})
 	table.AppendBulk(pricing.tableData)
 	table.Render()
