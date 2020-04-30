@@ -2,6 +2,8 @@ package prices
 
 import (
 	"fmt"
+
+	"github.com/kainosnoema/terracost/cli/terraform"
 )
 
 var rdsInstanceClassMap = map[string]string{
@@ -59,7 +61,21 @@ var rdsEngineOperationMap = map[string]string{
 	"aurora-postgresql:general-public-license": "CreateDBInstance:0021",
 }
 
-func RDSInstance(region string, changeAttrs map[string]interface{}) []PriceQuery {
+func AWSDBInstance(region string, changes terraform.ChangeJSON) ChangesQueries {
+	changesQueries := ChangesQueries{}
+
+	if changes.Before != nil {
+		changesQueries.Before = []PriceQuery{rdSInstance(region, changes.Before)}
+	}
+
+	if changes.After != nil {
+		changesQueries.After = []PriceQuery{rdSInstance(region, changes.After)}
+	}
+
+	return changesQueries
+}
+
+func rdSInstance(region string, changeAttrs map[string]interface{}) PriceQuery {
 	instanceClass := changeAttrs["instance_class"].(string)
 	if mappedClass, ok := rdsInstanceClassMap[instanceClass]; ok {
 		instanceClass = mappedClass
@@ -74,12 +90,12 @@ func RDSInstance(region string, changeAttrs map[string]interface{}) []PriceQuery
 		licenseModel = "general-public-license"
 	}
 
-	return []PriceQuery{{
+	return PriceQuery{
 		ServiceCode: "AmazonRDS",
 		UsageOperation: fmt.Sprintf("%s-InstanceUsage:%s:%s",
 			regionMap[region],
 			instanceClass,
 			rdsEngineOperationMap[changeAttrs["engine"].(string)+":"+licenseModel],
 		),
-	}}
+	}
 }

@@ -7,63 +7,75 @@ import (
 
 // Resource maps a Terraform resource to AWS pricing
 type Resource struct {
-	Type   string
-	Name   string
-	Prices map[prices.PriceQuery]prices.Price
+	Address string
+	Action  string
+	Before  Prices
+	After   Prices
 }
+
+// Prices maps a price query to the price result
+type Prices map[prices.PriceQuery]*prices.Price
 
 // Calculate takes a TF plan, fetches AWS prices, and returns priced Resources
 func Calculate(tfPlan *terraform.PlanJSON) ([]Resource, error) {
 	region := tfPlan.Region()
 	resources := []Resource{}
-	allQueries := map[prices.PriceQuery]prices.Price{}
+	pendingPrices := Prices{}
 
 	for _, res := range tfPlan.ResourceChanges {
 		resource := Resource{
-			Type:   res.Type,
-			Name:   res.Name,
-			Prices: map[prices.PriceQuery]prices.Price{},
+			Address: res.Address,
+			Action:  res.Change.Actions[0],
+			Before:  Prices{},
+			After:   Prices{},
 		}
 
-		for _, priceQuery := range prices.Resource(region, res) {
-			emptyPrice := prices.Price{
-				ServiceCode:    priceQuery.ServiceCode,
-				UsageOperation: priceQuery.UsageOperation,
+		changesQueries := prices.ResourceChangesQueries(region, res)
+
+		for _, beforeQuery := range changesQueries.Before {
+			pendingPrice := pendingPrices[beforeQuery]
+			if pendingPrice == nil {
+				pendingPrice = &prices.Price{
+					ServiceCode:    beforeQuery.ServiceCode,
+					UsageOperation: beforeQuery.UsageOperation,
+				}
+				pendingPrices[beforeQuery] = pendingPrice
 			}
-			resource.Prices[priceQuery] = emptyPrice
-			allQueries[priceQuery] = emptyPrice
+			resource.Before[beforeQuery] = pendingPrice
+		}
+
+		for _, afterQuery := range changesQueries.After {
+			pendingPrice := pendingPrices[afterQuery]
+			if pendingPrice == nil {
+				pendingPrice = &prices.Price{
+					ServiceCode:    afterQuery.ServiceCode,
+					UsageOperation: afterQuery.UsageOperation,
+				}
+				pendingPrices[afterQuery] = pendingPrice
+			}
+			resource.After[afterQuery] = pendingPrice
 		}
 
 		resources = append(resources, resource)
 	}
 
-	var lookup []prices.PriceQuery
-	for q := range allQueries {
-		lookup = append(lookup, q)
+	var queries []prices.PriceQuery
+	for q := range pendingPrices {
+		queries = append(queries, q)
 	}
 
-	priceRes, err := prices.Lookup(lookup)
+	priceRes, err := prices.LookupQueries(queries)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, price := range priceRes {
-		allQueries[prices.PriceQuery{
+		pendingPrice := pendingPrices[prices.PriceQuery{
 			ServiceCode:    price.ServiceCode,
 			UsageOperation: price.UsageOperation,
-		}] = price
-	}
-
-	for k, resource := range resources {
-		resPrices := resource.Prices
-		for priceQuery := range resPrices {
-			resPrices[priceQuery] = allQueries[prices.PriceQuery{
-				ServiceCode:    priceQuery.ServiceCode,
-				UsageOperation: priceQuery.UsageOperation,
-			}]
-		}
-		resource.Prices = resPrices
-		resources[k] = resource
+		}]
+		pendingPrice.Dimensions = price.Dimensions
+		pendingPrice.Updated = price.Updated
 	}
 
 	return resources, nil

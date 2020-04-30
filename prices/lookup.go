@@ -46,7 +46,7 @@ var priceQueryGql = `query ($lookup: [PriceQuery!]) {
 }`
 
 // Lookup hits the Terracost API with a list of queries and returns prices
-func Lookup(queries []PriceQuery) ([]Price, error) {
+func LookupQueries(queries []PriceQuery) ([]Price, error) {
 	req := graphql.NewRequest(priceQueryGql)
 	req.Var("lookup", queries)
 

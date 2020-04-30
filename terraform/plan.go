@@ -23,8 +23,9 @@ type ResourceChangeJSON struct {
 }
 
 type ChangeJSON struct {
-	Before map[string]interface{}
-	After  map[string]interface{}
+	Actions []string
+	Before  map[string]interface{}
+	After   map[string]interface{}
 }
 
 type ConfigurationJSON struct {

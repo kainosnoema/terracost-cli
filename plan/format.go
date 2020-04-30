@@ -4,20 +4,26 @@ import (
 	"io"
 	"strconv"
 
+	"github.com/kainosnoema/terracost/cli/prices"
 	"github.com/olekukonko/tablewriter"
 )
 
+type pricingTable struct {
+	tableData         [][]string
+	hourlyTotalBefore float64
+	hourlyTotalAfter  float64
+	monthlyTotalDelta float64
+}
+
 // FormatTable takes an io.Writer (such as os.Stdout) and writes a nicely formatted cost table
 func FormatTable(writer io.Writer, resources []Resource) {
-	tableData := [][]string{}
-	hourlyTotal := 0.0
-	monthlyTotal := 0.0
+	pricing := pricingTable{}
 
 	for _, res := range resources {
-		if len(res.Prices) == 0 { // unable to find prices
-			tableData = append(tableData, []string{
-				res.Type,
-				res.Name,
+		// unable to find prices
+		if len(res.Before) == 0 && len(res.After) == 0 {
+			pricing.tableData = append(pricing.tableData, []string{
+				res.Address,
 				"?",
 				"?",
 				"?",
@@ -26,44 +32,76 @@ func FormatTable(writer io.Writer, resources []Resource) {
 			continue
 		}
 
-		for _, price := range res.Prices {
-			hourlyCost, _ := strconv.ParseFloat(price.Dimensions[0].PricePerUnit, 32)
-			monthlyCost := hourlyCost * 730
-			hourlyTotal += hourlyCost
-			monthlyTotal += monthlyCost
+		for priceChange := range res.Before {
+			addTableRow(&pricing, res, priceChange)
+		}
 
-			tableData = append(tableData, []string{
-				res.Type,
-				res.Name,
-				price.ServiceCode,
-				price.UsageOperation,
-				"$" + strconv.FormatFloat(hourlyCost, 'f', 3, 32),
-				"$" + strconv.FormatFloat(monthlyCost, 'f', 2, 32),
-			})
+		for priceChange := range res.After {
+			addTableRow(&pricing, res, priceChange)
 		}
 	}
 
 	table := tablewriter.NewWriter(writer)
 	table.SetHeader([]string{
 		"Resource",
-		"Name",
 		"Service",
 		"Usage Operation",
-		"Hourly Cost",
-		"Monthly Cost",
+		"Hourly Before",
+		"Hourly After",
+		"Monthly Delta",
 	})
 	table.SetFooter([]string{
 		"",
 		"",
-		"",
 		"Total",
-		"$" + strconv.FormatFloat(hourlyTotal, 'f', 3, 32),
-		"$" + strconv.FormatFloat(monthlyTotal, 'f', 2, 32),
+		"$" + strconv.FormatFloat(pricing.hourlyTotalBefore, 'f', 3, 32),
+		"$" + strconv.FormatFloat(pricing.hourlyTotalAfter, 'f', 3, 32),
+		"$" + strconv.FormatFloat(pricing.monthlyTotalDelta, 'f', 3, 32),
 	})
 	table.SetAlignment(tablewriter.ALIGN_RIGHT)
 	table.SetFooterAlignment(tablewriter.ALIGN_RIGHT)
 	table.SetBorder(false)
-	table.SetAutoMergeCellsByColumnIndex([]int{0, 1})
-	table.AppendBulk(tableData)
+	table.SetAutoMergeCellsByColumnIndex([]int{0})
+	table.AppendBulk(pricing.tableData)
 	table.Render()
+}
+
+func addTableRow(pricing *pricingTable, res Resource, priceQuery prices.PriceQuery) {
+	beforePrice := res.Before[priceQuery]
+	price := res.After[priceQuery]
+
+	var hourlyBefore, hourlyAfter float64
+	if beforePrice != nil && len(beforePrice.Dimensions) > 0 {
+		hourlyBefore, _ = strconv.ParseFloat(beforePrice.Dimensions[0].PricePerUnit, 32)
+	}
+
+	if price != nil && len(price.Dimensions) > 0 {
+		hourlyAfter, _ = strconv.ParseFloat(price.Dimensions[0].PricePerUnit, 32)
+	} else if beforePrice != nil {
+		price = beforePrice
+	}
+	monthlyDelta := (hourlyAfter - hourlyBefore) * 730
+
+	pricing.hourlyTotalBefore += hourlyBefore
+	pricing.hourlyTotalAfter += hourlyAfter
+	pricing.monthlyTotalDelta += monthlyDelta
+
+	formattedBefore := "-"
+	if hourlyBefore > 0 {
+		formattedBefore = "$" + strconv.FormatFloat(hourlyBefore, 'f', 3, 32)
+	}
+	formattedAfter := "-"
+	if hourlyAfter > 0 {
+		formattedAfter = "$" + strconv.FormatFloat(hourlyAfter, 'f', 3, 32)
+	}
+	formattedMonthlyDelta := "$" + strconv.FormatFloat(monthlyDelta, 'f', 3, 32)
+
+	pricing.tableData = append(pricing.tableData, []string{
+		res.Address,
+		price.ServiceCode,
+		price.UsageOperation,
+		formattedBefore,
+		formattedAfter,
+		formattedMonthlyDelta,
+	})
 }

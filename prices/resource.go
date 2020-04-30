@@ -35,24 +35,18 @@ var regionMap = map[string]string{
 	"us-west-2":      "USW2",
 }
 
-func Resource(region string, res terraform.ResourceChangeJSON) []PriceQuery {
-	priceQueries := []PriceQuery{}
+type ChangesQueries struct {
+	Before []PriceQuery
+	After  []PriceQuery
+}
 
+func ResourceChangesQueries(region string, res terraform.ResourceChangeJSON) ChangesQueries {
 	switch res.Type {
 	case "aws_instance":
-		if res.Change.Before == nil { // creating
-			priceQueries = append(priceQueries, EC2Instance(region, res.Change.After)...)
-		} else if res.Change.After == nil { // deleting
-		} else { // updating
-		}
+		return AWSInstance(region, res.Change)
 	case "aws_db_instance":
-		if res.Change.Before == nil { // creating
-			priceQueries = append(priceQueries, RDSInstance(region, res.Change.After)...)
-		} else if res.Change.After == nil { // deleting
-		} else { // updating
-		}
+		return AWSDBInstance(region, res.Change)
 	default:
+		return ChangesQueries{}
 	}
-
-	return priceQueries
 }

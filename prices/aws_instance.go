@@ -6,19 +6,34 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/kainosnoema/terracost/cli/terraform"
 )
 
-func EC2Instance(region string, changeAttrs map[string]interface{}) []PriceQuery {
+func AWSInstance(region string, changes terraform.ChangeJSON) ChangesQueries {
+	changesQueries := ChangesQueries{}
+
+	if changes.Before != nil {
+		changesQueries.Before = []PriceQuery{ec2Instance(region, changes.Before)}
+	}
+
+	if changes.After != nil {
+		changesQueries.After = []PriceQuery{ec2Instance(region, changes.After)}
+	}
+
+	return changesQueries
+}
+
+func ec2Instance(region string, changeAttrs map[string]interface{}) PriceQuery {
 	ec2UsageOperation := fmt.Sprintf("%s-BoxUsage:%s:%s",
 		regionMap[region],
 		changeAttrs["instance_type"].(string),
 		imageUsageOperation(region, changeAttrs["ami"].(string)),
 	)
 
-	return []PriceQuery{{
+	return PriceQuery{
 		ServiceCode:    "AmazonEC2",
 		UsageOperation: ec2UsageOperation,
-	}}
+	}
 }
 
 // TODO: make a single API call for all AMIs
