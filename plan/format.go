@@ -29,6 +29,7 @@ func FormatTable(writer io.Writer, resources []Resource) {
 				"?",
 				"?",
 				"?",
+				"?",
 			})
 			continue
 		}
@@ -66,7 +67,7 @@ func FormatTable(writer io.Writer, resources []Resource) {
 	table.SetAlignment(tablewriter.ALIGN_RIGHT)
 	table.SetFooterAlignment(tablewriter.ALIGN_RIGHT)
 	table.SetBorder(false)
-	table.SetAutoMergeCellsByColumnIndex([]int{0, 1})
+	table.SetAutoMergeCellsByColumnIndex([]int{0})
 	table.AppendBulk(pricing.tableData)
 	table.Render()
 }
