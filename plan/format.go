@@ -3,6 +3,7 @@ package plan
 import (
 	"io"
 	"strconv"
+	"strings"
 
 	"github.com/leekchan/accounting"
 	"github.com/mitchellh/colorstring"
@@ -40,12 +41,6 @@ func FormatTable(writer io.Writer, resources []Resource) {
 			continue
 		}
 
-		if res.Action != "no-op" {
-			for priceChange := range res.Before {
-				addTableRow(&pricing, res, priceChange)
-			}
-		}
-
 		for priceChange := range res.After {
 			addTableRow(&pricing, res, priceChange)
 		}
@@ -61,20 +56,13 @@ func FormatTable(writer io.Writer, resources []Resource) {
 		"Monthly Delta",
 	})
 
-	formattedHourlyBefore := money.FormatMoney(pricing.hourlyTotalBefore)
-	formattedHourlyAfter := money.FormatMoney(pricing.hourlyTotalAfter)
-	formattedMonthlyDelta := money.FormatMoney(pricing.monthlyTotalDelta)
-	if pricing.monthlyTotalDelta > 0 {
-		formattedMonthlyDelta = "+" + formattedMonthlyDelta
-	}
-
 	table.SetFooter([]string{
 		"",
 		"",
 		"Total",
-		formattedHourlyBefore,
-		formattedHourlyAfter,
-		formattedMonthlyDelta,
+		money.FormatMoney(pricing.hourlyTotalBefore),
+		money.FormatMoney(pricing.hourlyTotalAfter),
+		money.FormatMoney(pricing.monthlyTotalDelta),
 	})
 	table.SetFooterAlignment(tablewriter.ALIGN_RIGHT)
 	table.SetBorder(false)
@@ -94,8 +82,8 @@ func FormatTable(writer io.Writer, resources []Resource) {
 }
 
 func addTableRow(pricing *pricingTable, res Resource, priceID prices.PriceID) {
-	beforePrice := res.Before[priceID]
 	price := res.After[priceID]
+	beforePrice := findBeforePrice(res.Before, priceID)
 
 	var hourlyBefore, hourlyAfter float64
 	if beforePrice != nil && len(beforePrice.Dimensions) > 0 {
@@ -113,20 +101,13 @@ func addTableRow(pricing *pricingTable, res Resource, priceID prices.PriceID) {
 	pricing.hourlyTotalAfter += hourlyAfter
 	pricing.monthlyTotalDelta += monthlyDelta
 
-	formattedBefore := money.FormatMoney(hourlyBefore)
-	formattedAfter := money.FormatMoney(hourlyAfter)
-	formattedMonthlyDelta := money.FormatMoney(monthlyDelta)
-	if monthlyDelta > 0 {
-		formattedMonthlyDelta = "+" + formattedMonthlyDelta
-	}
-
 	pricing.tableData = append(pricing.tableData, []string{
 		formatAddress(res),
 		price.ServiceCode,
-		price.UsageOperation,
-		formattedBefore,
-		formattedAfter,
-		formattedMonthlyDelta,
+		formatDescription(beforePrice, price),
+		money.FormatMoney(hourlyBefore),
+		money.FormatMoney(hourlyAfter),
+		money.FormatMoney(monthlyDelta),
 	})
 }
 
@@ -143,4 +124,30 @@ func formatAddress(res Resource) string {
 	}
 
 	return colorstring.Color(actionIcon + " " + res.Address)
+}
+
+func formatDescription(beforePrice, price *prices.Price) string {
+	if beforePrice != nil && price != nil {
+		if beforePrice.UsageOperation == price.UsageOperation {
+			return price.UsageOperation
+		}
+		return beforePrice.UsageOperation + " -> " + price.UsageOperation
+	} else if beforePrice != nil {
+		return beforePrice.UsageOperation
+	}
+
+	return price.UsageOperation
+}
+
+func findBeforePrice(beforePrices prices.ByID, priceID prices.PriceID) *prices.Price {
+	if beforePrice, ok := beforePrices[priceID]; ok {
+		return beforePrice
+	}
+	usagePrefix := strings.SplitN(priceID.UsageOperation, ":", 2)[0]
+	for id, price := range beforePrices {
+		if strings.HasPrefix(id.UsageOperation, usagePrefix) {
+			return price
+		}
+	}
+	return nil
 }
