@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/leekchan/accounting"
+	"github.com/mitchellh/colorstring"
 	"github.com/olekukonko/tablewriter"
 
 	"github.com/kainosnoema/terracost/cli/prices"
@@ -133,13 +134,13 @@ func formatAddress(res Resource) string {
 	actionIcon := ""
 	switch res.Action {
 	case "create":
-		actionIcon = "+"
+		actionIcon = "[green]+[reset]"
 	case "delete":
-		actionIcon = "-"
+		actionIcon = "[red]-[reset]"
 	case "update":
-		actionIcon = "~"
+		actionIcon = "[yellow]~[reset]"
 	default:
 	}
 
-	return actionIcon + " " + res.Address
+	return colorstring.Color(actionIcon + " " + res.Address)
 }
