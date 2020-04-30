@@ -19,6 +19,11 @@ func Calculate(tfPlan *terraform.PlanJSON) ([]Resource, error) {
 	priceLookup := prices.NewLookup()
 
 	for _, res := range tfPlan.ResourceChanges {
+		// TODO: handle "replace" actions: ["create", "delete"] and ["delete", "create"]
+		if res.Change.Actions[0] == "read" {
+			continue
+		}
+
 		resource := Resource{
 			Address: res.Address,
 			Action:  res.Change.Actions[0],
