@@ -18,8 +18,8 @@ var money = &accounting.Accounting{
 
 type pricingTable struct {
 	tableData         [][]string
-	hourlyTotalBefore float64
-	hourlyTotalAfter  float64
+	hourlyTotal       float64
+	monthlyTotal      float64
 	monthlyTotalDelta float64
 }
 
@@ -32,7 +32,6 @@ func FormatTable(writer io.Writer, resources []Resource) {
 		if len(res.Before) == 0 && len(res.After) == 0 {
 			pricing.tableData = append(pricing.tableData, []string{
 				formatAddress(res),
-				"?",
 				"?",
 				"?",
 				"?",
@@ -55,19 +54,17 @@ func FormatTable(writer io.Writer, resources []Resource) {
 	table := tablewriter.NewWriter(writer)
 	table.SetHeader([]string{
 		"Resource",
-		"Service",
 		"Usage Operation",
-		"Hourly Before",
-		"Hourly After",
+		"Hourly",
+		"Monthly",
 		"Monthly Delta",
 	})
 
 	table.SetFooter([]string{
 		"",
-		"",
 		"Total",
-		money.FormatMoney(pricing.hourlyTotalBefore),
-		money.FormatMoney(pricing.hourlyTotalAfter),
+		money.FormatMoney(pricing.hourlyTotal),
+		money.FormatMoney(pricing.monthlyTotal),
 		money.FormatMoney(pricing.monthlyTotalDelta),
 	})
 	table.SetFooterAlignment(tablewriter.ALIGN_RIGHT)
@@ -75,8 +72,6 @@ func FormatTable(writer io.Writer, resources []Resource) {
 	table.SetAutoMergeCellsByColumnIndex([]int{0})
 	table.SetAutoWrapText(false)
 	table.SetColumnAlignment([]int{
-		tablewriter.ALIGN_LEFT,
-		tablewriter.ALIGN_LEFT,
 		tablewriter.ALIGN_LEFT,
 		tablewriter.ALIGN_LEFT,
 		tablewriter.ALIGN_RIGHT,
@@ -101,19 +96,19 @@ func addTableRow(pricing *pricingTable, res Resource, priceID prices.PriceID) {
 	} else if beforePrice != nil {
 		price = beforePrice
 	}
+	monthlyAfter := hourlyAfter * 730
 	monthlyDelta := (hourlyAfter - hourlyBefore) * 730
 
-	pricing.hourlyTotalBefore += hourlyBefore
-	pricing.hourlyTotalAfter += hourlyAfter
+	pricing.hourlyTotal += hourlyAfter
+	pricing.monthlyTotal += monthlyAfter
 	pricing.monthlyTotalDelta += monthlyDelta
 
 	pricing.tableData = append(pricing.tableData, []string{
 		formatAddress(res),
-		price.ServiceCode,
 		formatDescription(beforePrice, price),
-		money.FormatMoney(hourlyBefore),
 		money.FormatMoney(hourlyAfter),
-		money.FormatMoney(monthlyDelta),
+		money.FormatMoney(monthlyAfter),
+		formatDelta(monthlyDelta),
 	})
 }
 
@@ -130,6 +125,17 @@ func formatAddress(res Resource) string {
 	}
 
 	return colorstring.Color(actionIcon + " " + res.Address)
+}
+
+func formatDelta(delta float64) string {
+	formattedDelta := money.FormatMoney(delta)
+	// return formattedDelta
+	if delta > 0 {
+		formattedDelta = colorstring.Color("[light_red]" + formattedDelta)
+	} else if delta < 0 {
+		formattedDelta = colorstring.Color("[light_green]" + formattedDelta)
+	}
+	return formattedDelta
 }
 
 func formatDescription(beforePrice, price *prices.Price) string {
