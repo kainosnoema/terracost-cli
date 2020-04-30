@@ -80,7 +80,7 @@ func FormatTable(writer io.Writer, resources []Resource) {
 		"Total",
 		money3.FormatMoney(pricing.hourlyTotal) + "/hr",
 		money2.FormatMoney(pricing.monthlyTotal) + "/mo",
-		formatDelta(pricing.monthlyTotalDelta) + "/mo",
+		formatDelta(pricing.monthlyTotalDelta),
 	})
 	table.AppendBulk(pricing.tableData)
 	table.Render()
@@ -112,7 +112,7 @@ func addTableRow(pricing *pricingTable, res Resource, priceID prices.PriceID) {
 		formatDescription(beforePrice, price),
 		money3.FormatMoney(hourlyAfter) + "/hr",
 		money2.FormatMoney(monthlyAfter) + "/mo",
-		formatDelta(monthlyDelta) + "/mo",
+		formatDelta(monthlyDelta),
 	})
 }
 
@@ -134,9 +134,9 @@ func formatAddress(res Resource) string {
 func formatDelta(delta float64) string {
 	formattedDelta := money2.FormatMoney(delta)
 	if delta > 0 {
-		formattedDelta = colorstring.Color("[light_red]" + formattedDelta)
+		formattedDelta = colorstring.Color("[light_red]" + formattedDelta + "/mo")
 	} else if delta < 0 {
-		formattedDelta = colorstring.Color("[light_green]" + formattedDelta)
+		formattedDelta = colorstring.Color("[light_green]" + formattedDelta + "/mo")
 	}
 	return formattedDelta
 }
