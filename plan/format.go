@@ -12,8 +12,8 @@ import (
 	"github.com/kainosnoema/terracost/cli/prices"
 )
 
-var money2 = &accounting.Accounting{Symbol: "$", Precision: 2, Format: "%s%v"}
-var money3 = &accounting.Accounting{Symbol: "$", Precision: 3, Format: "%s%v"}
+var moneyMo = &accounting.Accounting{Symbol: "$", Precision: 2, Format: "%s%v/mo", FormatZero: "-"}
+var moneyHr = &accounting.Accounting{Symbol: "$", Precision: 3, Format: "%s%v/hr", FormatZero: "-"}
 
 type pricingTable struct {
 	tableData         [][]string
@@ -78,8 +78,8 @@ func FormatTable(writer io.Writer, resources []Resource) {
 	table.SetFooter([]string{
 		" ",
 		"Total",
-		money3.FormatMoney(pricing.hourlyTotal) + "/hr",
-		money2.FormatMoney(pricing.monthlyTotal) + "/mo",
+		moneyHr.FormatMoney(pricing.hourlyTotal),
+		moneyMo.FormatMoney(pricing.monthlyTotal),
 		formatDelta(pricing.monthlyTotalDelta),
 	})
 	table.AppendBulk(pricing.tableData)
@@ -110,8 +110,8 @@ func addTableRow(pricing *pricingTable, res Resource, priceID prices.PriceID) {
 	pricing.tableData = append(pricing.tableData, []string{
 		formatAddress(res),
 		formatDescription(beforePrice, price),
-		money3.FormatMoney(hourlyAfter) + "/hr",
-		money2.FormatMoney(monthlyAfter) + "/mo",
+		moneyHr.FormatMoney(hourlyAfter),
+		moneyMo.FormatMoney(monthlyAfter),
 		formatDelta(monthlyDelta),
 	})
 }
@@ -132,11 +132,11 @@ func formatAddress(res Resource) string {
 }
 
 func formatDelta(delta float64) string {
-	formattedDelta := money2.FormatMoney(delta)
+	formattedDelta := moneyMo.FormatMoney(delta)
 	if delta > 0 {
-		formattedDelta = colorstring.Color("[light_red]" + formattedDelta + "/mo")
+		formattedDelta = colorstring.Color("[light_red]" + formattedDelta)
 	} else if delta < 0 {
-		formattedDelta = colorstring.Color("[light_green]" + formattedDelta + "/mo")
+		formattedDelta = colorstring.Color("[light_green]" + formattedDelta)
 	}
 	return formattedDelta
 }
