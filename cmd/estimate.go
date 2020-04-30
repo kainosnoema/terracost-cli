@@ -27,6 +27,7 @@ func runEstimate(cmd *cobra.Command, args []string) {
 	var err error
 
 	if len(args) > 0 {
+		fmt.Println("Parsing plan...")
 		tfPlan, err = terraform.ShowPlan(args[0])
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Error running Terraform:", err.Error())

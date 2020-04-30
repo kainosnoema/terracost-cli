@@ -12,12 +12,8 @@ import (
 	"github.com/kainosnoema/terracost/cli/prices"
 )
 
-var money2 = &accounting.Accounting{
-	Symbol: "$", Precision: 2, Format: "%s%v", FormatZero: "-",
-}
-var money3 = &accounting.Accounting{
-	Symbol: "$", Precision: 3, Format: "%s%v", FormatZero: "-",
-}
+var money2 = &accounting.Accounting{Symbol: "$", Precision: 2, Format: "%s%v"}
+var money3 = &accounting.Accounting{Symbol: "$", Precision: 3, Format: "%s%v"}
 
 type pricingTable struct {
 	tableData         [][]string
@@ -56,6 +52,7 @@ func FormatTable(writer io.Writer, resources []Resource) {
 
 	table := tablewriter.NewWriter(writer)
 	table.SetBorder(false)
+	table.SetAutoFormatHeaders(false)
 	table.SetAutoMergeCellsByColumnIndex([]int{0})
 	table.SetAutoWrapText(false)
 	table.SetCenterSeparator("")
@@ -75,15 +72,15 @@ func FormatTable(writer io.Writer, resources []Resource) {
 		"AWS Usage",
 		"Hourly",
 		"Monthly",
-		"Monthly Delta",
+		"Delta",
 	})
 
 	table.SetFooter([]string{
 		" ",
 		"Total",
-		money3.FormatMoney(pricing.hourlyTotal),
-		money2.FormatMoney(pricing.monthlyTotal),
-		money2.FormatMoney(pricing.monthlyTotalDelta),
+		money3.FormatMoney(pricing.hourlyTotal) + "/hr",
+		money2.FormatMoney(pricing.monthlyTotal) + "/mo",
+		money2.FormatMoney(pricing.monthlyTotalDelta) + "/mo",
 	})
 	table.AppendBulk(pricing.tableData)
 	table.Render()
@@ -113,9 +110,9 @@ func addTableRow(pricing *pricingTable, res Resource, priceID prices.PriceID) {
 	pricing.tableData = append(pricing.tableData, []string{
 		formatAddress(res),
 		formatDescription(beforePrice, price),
-		money3.FormatMoney(hourlyAfter),
-		money2.FormatMoney(monthlyAfter),
-		formatDelta(monthlyDelta),
+		money3.FormatMoney(hourlyAfter) + "/hr",
+		money2.FormatMoney(monthlyAfter) + "/mo",
+		formatDelta(monthlyDelta) + "/mo",
 	})
 }
 
