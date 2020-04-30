@@ -41,8 +41,14 @@ func FormatTable(writer io.Writer, resources []Resource) {
 			continue
 		}
 
-		for priceChange := range res.After {
-			addTableRow(&pricing, res, priceChange)
+		if res.Action == "delete" {
+			for priceChange := range res.Before {
+				addTableRow(&pricing, res, priceChange)
+			}
+		} else {
+			for priceChange := range res.After {
+				addTableRow(&pricing, res, priceChange)
+			}
 		}
 	}
 

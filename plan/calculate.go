@@ -19,14 +19,18 @@ func Calculate(tfPlan *terraform.PlanJSON) ([]Resource, error) {
 	priceLookup := prices.NewLookup()
 
 	for _, res := range tfPlan.ResourceChanges {
-		// TODO: handle "replace" actions: ["create", "delete"] and ["delete", "create"]
-		if res.Change.Actions[0] == "read" {
+		action := res.Change.Actions[0]
+		if action == "read" {
 			continue
+		}
+
+		if len(res.Change.Actions) > 1 {
+			action = "update" // we don't care about update vs. replace
 		}
 
 		resource := Resource{
 			Address: res.Address,
-			Action:  res.Change.Actions[0],
+			Action:  action,
 			Before:  prices.ByID{},
 			After:   prices.ByID{},
 		}
