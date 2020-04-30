@@ -35,10 +35,10 @@ func FormatTable(writer io.Writer, resources []Resource) {
 		if len(res.Before) == 0 && len(res.After) == 0 {
 			pricing.tableData = append(pricing.tableData, []string{
 				formatAddress(res),
-				"?",
-				"?",
-				"?",
-				"?",
+				colorstring.Color("[dark_gray]* unknown resource *"),
+				"",
+				"",
+				"",
 			})
 			continue
 		}
@@ -57,7 +57,7 @@ func FormatTable(writer io.Writer, resources []Resource) {
 	table := tablewriter.NewWriter(writer)
 	table.SetHeader([]string{
 		"Resource",
-		"Usage",
+		"AWS Usage",
 		"Hourly",
 		"Monthly",
 		"Monthly Delta",
