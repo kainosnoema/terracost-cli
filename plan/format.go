@@ -36,9 +36,9 @@ func FormatTable(writer io.Writer, resources []Resource) {
 			pricing.tableData = append(pricing.tableData, []string{
 				formatAddress(res),
 				colorstring.Color("[dark_gray]* unknown resource *"),
-				"",
-				"",
-				"",
+				" ",
+				" ",
+				" ",
 			})
 			continue
 		}
@@ -55,6 +55,21 @@ func FormatTable(writer io.Writer, resources []Resource) {
 	}
 
 	table := tablewriter.NewWriter(writer)
+	table.SetBorder(false)
+	table.SetAutoMergeCellsByColumnIndex([]int{0})
+	table.SetAutoWrapText(false)
+	table.SetCenterSeparator("")
+	table.SetColumnSeparator("")
+	table.SetColumnAlignment([]int{
+		tablewriter.ALIGN_LEFT,
+		tablewriter.ALIGN_LEFT,
+		tablewriter.ALIGN_RIGHT,
+		tablewriter.ALIGN_RIGHT,
+		tablewriter.ALIGN_RIGHT,
+	})
+	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+	table.SetFooterAlignment(tablewriter.ALIGN_RIGHT)
+
 	table.SetHeader([]string{
 		"Resource",
 		"AWS Usage",
@@ -64,22 +79,11 @@ func FormatTable(writer io.Writer, resources []Resource) {
 	})
 
 	table.SetFooter([]string{
-		"",
+		" ",
 		"Total",
 		money3.FormatMoney(pricing.hourlyTotal),
 		money2.FormatMoney(pricing.monthlyTotal),
 		money2.FormatMoney(pricing.monthlyTotalDelta),
-	})
-	table.SetFooterAlignment(tablewriter.ALIGN_RIGHT)
-	table.SetBorder(false)
-	table.SetAutoMergeCellsByColumnIndex([]int{0})
-	table.SetAutoWrapText(false)
-	table.SetColumnAlignment([]int{
-		tablewriter.ALIGN_LEFT,
-		tablewriter.ALIGN_LEFT,
-		tablewriter.ALIGN_RIGHT,
-		tablewriter.ALIGN_RIGHT,
-		tablewriter.ALIGN_RIGHT,
 	})
 	table.AppendBulk(pricing.tableData)
 	table.Render()
@@ -145,7 +149,19 @@ func formatDescription(beforePrice, price *prices.Price) string {
 		if beforePrice.UsageOperation == price.UsageOperation {
 			return price.UsageOperation
 		}
-		return beforePrice.UsageOperation + " -> " + price.UsageOperation
+
+		before := strings.Split(beforePrice.UsageOperation, ":")
+		after := strings.Split(price.UsageOperation, ":")
+		diffSegments := []string{}
+		for i, beforeSeg := range before {
+			if after[i] == beforeSeg {
+				diffSegments = append(diffSegments, beforeSeg)
+			} else {
+				diffSegments = append(diffSegments, "("+beforeSeg+" -> "+after[i]+")")
+			}
+		}
+
+		return strings.Join(diffSegments, ":")
 	} else if beforePrice != nil {
 		return beforePrice.UsageOperation
 	}
