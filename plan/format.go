@@ -24,6 +24,7 @@ func FormatTable(writer io.Writer, resources []Resource) {
 		if len(res.Before) == 0 && len(res.After) == 0 {
 			pricing.tableData = append(pricing.tableData, []string{
 				res.Address,
+				res.Action,
 				"?",
 				"?",
 				"?",
@@ -32,8 +33,10 @@ func FormatTable(writer io.Writer, resources []Resource) {
 			continue
 		}
 
-		for priceChange := range res.Before {
-			addTableRow(&pricing, res, priceChange)
+		if res.Action != "no-op" {
+			for priceChange := range res.Before {
+				addTableRow(&pricing, res, priceChange)
+			}
 		}
 
 		for priceChange := range res.After {
@@ -44,6 +47,7 @@ func FormatTable(writer io.Writer, resources []Resource) {
 	table := tablewriter.NewWriter(writer)
 	table.SetHeader([]string{
 		"Resource",
+		"Action",
 		"Service",
 		"Usage Operation",
 		"Hourly Before",
@@ -51,6 +55,7 @@ func FormatTable(writer io.Writer, resources []Resource) {
 		"Monthly Delta",
 	})
 	table.SetFooter([]string{
+		"",
 		"",
 		"",
 		"Total",
@@ -61,7 +66,7 @@ func FormatTable(writer io.Writer, resources []Resource) {
 	table.SetAlignment(tablewriter.ALIGN_RIGHT)
 	table.SetFooterAlignment(tablewriter.ALIGN_RIGHT)
 	table.SetBorder(false)
-	table.SetAutoMergeCellsByColumnIndex([]int{0})
+	table.SetAutoMergeCellsByColumnIndex([]int{0, 1})
 	table.AppendBulk(pricing.tableData)
 	table.Render()
 }
@@ -98,6 +103,7 @@ func addTableRow(pricing *pricingTable, res Resource, priceID prices.PriceID) {
 
 	pricing.tableData = append(pricing.tableData, []string{
 		res.Address,
+		res.Action,
 		price.ServiceCode,
 		price.UsageOperation,
 		formattedBefore,
