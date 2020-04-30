@@ -64,10 +64,18 @@ func FormatTable(writer io.Writer, resources []Resource) {
 		"$" + strconv.FormatFloat(pricing.hourlyTotalAfter, 'f', 3, 32),
 		"$" + strconv.FormatFloat(pricing.monthlyTotalDelta, 'f', 3, 32),
 	})
-	table.SetAlignment(tablewriter.ALIGN_RIGHT)
 	table.SetFooterAlignment(tablewriter.ALIGN_RIGHT)
 	table.SetBorder(false)
 	table.SetAutoMergeCellsByColumnIndex([]int{0})
+	table.SetColumnAlignment([]int{
+		tablewriter.ALIGN_LEFT,
+		tablewriter.ALIGN_LEFT,
+		tablewriter.ALIGN_LEFT,
+		tablewriter.ALIGN_LEFT,
+		tablewriter.ALIGN_RIGHT,
+		tablewriter.ALIGN_RIGHT,
+		tablewriter.ALIGN_RIGHT,
+	})
 	table.AppendBulk(pricing.tableData)
 	table.Render()
 }
