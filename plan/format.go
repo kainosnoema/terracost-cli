@@ -78,6 +78,7 @@ func FormatTable(writer io.Writer, resources []Resource) {
 	table.SetFooterAlignment(tablewriter.ALIGN_RIGHT)
 	table.SetBorder(false)
 	table.SetAutoMergeCellsByColumnIndex([]int{0})
+	table.SetAutoWrapText(false)
 	table.SetColumnAlignment([]int{
 		tablewriter.ALIGN_LEFT,
 		tablewriter.ALIGN_LEFT,
