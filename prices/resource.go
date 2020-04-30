@@ -35,18 +35,18 @@ var regionMap = map[string]string{
 	"us-west-2":      "USW2",
 }
 
-type ChangesQueries struct {
-	Before []PriceQuery
-	After  []PriceQuery
+type ChangesPriceIDs struct {
+	Before []PriceID
+	After  []PriceID
 }
 
-func ResourceChangesQueries(region string, res terraform.ResourceChangeJSON) ChangesQueries {
+func ResourceChangesPriceIDs(region string, res terraform.ResourceChangeJSON) ChangesPriceIDs {
 	switch res.Type {
 	case "aws_instance":
 		return AWSInstance(region, res.Change)
 	case "aws_db_instance":
 		return AWSDBInstance(region, res.Change)
 	default:
-		return ChangesQueries{}
+		return ChangesPriceIDs{}
 	}
 }

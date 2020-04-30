@@ -9,73 +9,37 @@ import (
 type Resource struct {
 	Address string
 	Action  string
-	Before  Prices
-	After   Prices
+	Before  prices.ByID
+	After   prices.ByID
 }
-
-// Prices maps a price query to the price result
-type Prices map[prices.PriceQuery]*prices.Price
 
 // Calculate takes a TF plan, fetches AWS prices, and returns priced Resources
 func Calculate(tfPlan *terraform.PlanJSON) ([]Resource, error) {
-	region := tfPlan.Region()
 	resources := []Resource{}
-	pendingPrices := Prices{}
+	priceLookup := prices.NewLookup()
 
 	for _, res := range tfPlan.ResourceChanges {
 		resource := Resource{
 			Address: res.Address,
 			Action:  res.Change.Actions[0],
-			Before:  Prices{},
-			After:   Prices{},
+			Before:  prices.ByID{},
+			After:   prices.ByID{},
 		}
 
-		changesQueries := prices.ResourceChangesQueries(region, res)
-
-		for _, beforeQuery := range changesQueries.Before {
-			pendingPrice := pendingPrices[beforeQuery]
-			if pendingPrice == nil {
-				pendingPrice = &prices.Price{
-					ServiceCode:    beforeQuery.ServiceCode,
-					UsageOperation: beforeQuery.UsageOperation,
-				}
-				pendingPrices[beforeQuery] = pendingPrice
-			}
-			resource.Before[beforeQuery] = pendingPrice
+		changesPriceIDs := prices.ResourceChangesPriceIDs(tfPlan.Region(), res)
+		for _, beforePriceID := range changesPriceIDs.Before {
+			resource.Before[beforePriceID] = priceLookup.Add(beforePriceID)
 		}
-
-		for _, afterQuery := range changesQueries.After {
-			pendingPrice := pendingPrices[afterQuery]
-			if pendingPrice == nil {
-				pendingPrice = &prices.Price{
-					ServiceCode:    afterQuery.ServiceCode,
-					UsageOperation: afterQuery.UsageOperation,
-				}
-				pendingPrices[afterQuery] = pendingPrice
-			}
-			resource.After[afterQuery] = pendingPrice
+		for _, afterPriceID := range changesPriceIDs.After {
+			resource.After[afterPriceID] = priceLookup.Add(afterPriceID)
 		}
 
 		resources = append(resources, resource)
 	}
 
-	var queries []prices.PriceQuery
-	for q := range pendingPrices {
-		queries = append(queries, q)
-	}
-
-	priceRes, err := prices.LookupQueries(queries)
+	err := priceLookup.Perform()
 	if err != nil {
 		return nil, err
-	}
-
-	for _, price := range priceRes {
-		pendingPrice := pendingPrices[prices.PriceQuery{
-			ServiceCode:    price.ServiceCode,
-			UsageOperation: price.UsageOperation,
-		}]
-		pendingPrice.Dimensions = price.Dimensions
-		pendingPrice.Updated = price.Updated
 	}
 
 	return resources, nil

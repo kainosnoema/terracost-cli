@@ -66,9 +66,9 @@ func FormatTable(writer io.Writer, resources []Resource) {
 	table.Render()
 }
 
-func addTableRow(pricing *pricingTable, res Resource, priceQuery prices.PriceQuery) {
-	beforePrice := res.Before[priceQuery]
-	price := res.After[priceQuery]
+func addTableRow(pricing *pricingTable, res Resource, priceID prices.PriceID) {
+	beforePrice := res.Before[priceID]
+	price := res.After[priceID]
 
 	var hourlyBefore, hourlyAfter float64
 	if beforePrice != nil && len(beforePrice.Dimensions) > 0 {

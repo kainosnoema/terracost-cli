@@ -9,28 +9,28 @@ import (
 	"github.com/kainosnoema/terracost/cli/terraform"
 )
 
-func AWSInstance(region string, changes terraform.ChangeJSON) ChangesQueries {
-	changesQueries := ChangesQueries{}
+func AWSInstance(region string, changes terraform.ChangeJSON) ChangesPriceIDs {
+	changesPriceIDs := ChangesPriceIDs{}
 
 	if changes.Before != nil {
-		changesQueries.Before = []PriceQuery{ec2Instance(region, changes.Before)}
+		changesPriceIDs.Before = []PriceID{ec2Instance(region, changes.Before)}
 	}
 
 	if changes.After != nil {
-		changesQueries.After = []PriceQuery{ec2Instance(region, changes.After)}
+		changesPriceIDs.After = []PriceID{ec2Instance(region, changes.After)}
 	}
 
-	return changesQueries
+	return changesPriceIDs
 }
 
-func ec2Instance(region string, changeAttrs map[string]interface{}) PriceQuery {
+func ec2Instance(region string, changeAttrs map[string]interface{}) PriceID {
 	ec2UsageOperation := fmt.Sprintf("%s-BoxUsage:%s:%s",
 		regionMap[region],
 		changeAttrs["instance_type"].(string),
 		imageUsageOperation(region, changeAttrs["ami"].(string)),
 	)
 
-	return PriceQuery{
+	return PriceID{
 		ServiceCode:    "AmazonEC2",
 		UsageOperation: ec2UsageOperation,
 	}

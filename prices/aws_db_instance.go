@@ -61,21 +61,21 @@ var rdsEngineOperationMap = map[string]string{
 	"aurora-postgresql:general-public-license": "CreateDBInstance:0021",
 }
 
-func AWSDBInstance(region string, changes terraform.ChangeJSON) ChangesQueries {
-	changesQueries := ChangesQueries{}
+func AWSDBInstance(region string, changes terraform.ChangeJSON) ChangesPriceIDs {
+	changesPriceIDs := ChangesPriceIDs{}
 
 	if changes.Before != nil {
-		changesQueries.Before = []PriceQuery{rdSInstance(region, changes.Before)}
+		changesPriceIDs.Before = []PriceID{rdSInstance(region, changes.Before)}
 	}
 
 	if changes.After != nil {
-		changesQueries.After = []PriceQuery{rdSInstance(region, changes.After)}
+		changesPriceIDs.After = []PriceID{rdSInstance(region, changes.After)}
 	}
 
-	return changesQueries
+	return changesPriceIDs
 }
 
-func rdSInstance(region string, changeAttrs map[string]interface{}) PriceQuery {
+func rdSInstance(region string, changeAttrs map[string]interface{}) PriceID {
 	instanceClass := changeAttrs["instance_class"].(string)
 	if mappedClass, ok := rdsInstanceClassMap[instanceClass]; ok {
 		instanceClass = mappedClass
@@ -90,7 +90,7 @@ func rdSInstance(region string, changeAttrs map[string]interface{}) PriceQuery {
 		licenseModel = "general-public-license"
 	}
 
-	return PriceQuery{
+	return PriceID{
 		ServiceCode: "AmazonRDS",
 		UsageOperation: fmt.Sprintf("%s-InstanceUsage:%s:%s",
 			regionMap[region],
