@@ -18,7 +18,8 @@ func Calculate(tfPlan *terraform.PlanJSON) ([]Resource, error) {
 	resources := []Resource{}
 	priceLookup := prices.NewLookup()
 
-	for _, res := range tfPlan.ResourceChanges {
+	for i := len(tfPlan.ResourceChanges) - 1; i >= 0; i-- { // changes are in reverse order
+		res := tfPlan.ResourceChanges[i]
 		action := res.Change.Actions[0]
 		if action == "read" {
 			continue
