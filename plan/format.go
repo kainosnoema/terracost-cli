@@ -116,7 +116,7 @@ func addTableRow(pricing *pricingTable, res Resource, priceID prices.PriceID) {
 }
 
 func formatAddress(res Resource) string {
-	actionIcon := ""
+	actionIcon := " "
 	switch res.Action {
 	case "create":
 		actionIcon = "[green]+[reset]"
@@ -132,7 +132,6 @@ func formatAddress(res Resource) string {
 
 func formatDelta(delta float64) string {
 	formattedDelta := money2.FormatMoney(delta)
-	// return formattedDelta
 	if delta > 0 {
 		formattedDelta = colorstring.Color("[light_red]" + formattedDelta)
 	} else if delta < 0 {
