@@ -4,9 +4,15 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/kainosnoema/terracost/cli/prices"
+	"github.com/leekchan/accounting"
 	"github.com/olekukonko/tablewriter"
+
+	"github.com/kainosnoema/terracost/cli/prices"
 )
+
+var money = &accounting.Accounting{
+	Symbol: "$", Precision: 3, Format: "%s%v", FormatZero: "-",
+}
 
 type pricingTable struct {
 	tableData         [][]string
@@ -23,8 +29,7 @@ func FormatTable(writer io.Writer, resources []Resource) {
 		// unable to find prices
 		if len(res.Before) == 0 && len(res.After) == 0 {
 			pricing.tableData = append(pricing.tableData, []string{
-				res.Address,
-				res.Action,
+				formatAddress(res),
 				"?",
 				"?",
 				"?",
@@ -48,21 +53,27 @@ func FormatTable(writer io.Writer, resources []Resource) {
 	table := tablewriter.NewWriter(writer)
 	table.SetHeader([]string{
 		"Resource",
-		"Action",
 		"Service",
 		"Usage Operation",
 		"Hourly Before",
 		"Hourly After",
 		"Monthly Delta",
 	})
+
+	formattedHourlyBefore := money.FormatMoney(pricing.hourlyTotalBefore)
+	formattedHourlyAfter := money.FormatMoney(pricing.hourlyTotalAfter)
+	formattedMonthlyDelta := money.FormatMoney(pricing.monthlyTotalDelta)
+	if pricing.monthlyTotalDelta > 0 {
+		formattedMonthlyDelta = "+" + formattedMonthlyDelta
+	}
+
 	table.SetFooter([]string{
 		"",
 		"",
-		"",
 		"Total",
-		"$" + strconv.FormatFloat(pricing.hourlyTotalBefore, 'f', 3, 32),
-		"$" + strconv.FormatFloat(pricing.hourlyTotalAfter, 'f', 3, 32),
-		"$" + strconv.FormatFloat(pricing.monthlyTotalDelta, 'f', 3, 32),
+		formattedHourlyBefore,
+		formattedHourlyAfter,
+		formattedMonthlyDelta,
 	})
 	table.SetFooterAlignment(tablewriter.ALIGN_RIGHT)
 	table.SetBorder(false)
@@ -100,23 +111,34 @@ func addTableRow(pricing *pricingTable, res Resource, priceID prices.PriceID) {
 	pricing.hourlyTotalAfter += hourlyAfter
 	pricing.monthlyTotalDelta += monthlyDelta
 
-	formattedBefore := "-"
-	if hourlyBefore > 0 {
-		formattedBefore = "$" + strconv.FormatFloat(hourlyBefore, 'f', 3, 32)
+	formattedBefore := money.FormatMoney(hourlyBefore)
+	formattedAfter := money.FormatMoney(hourlyAfter)
+	formattedMonthlyDelta := money.FormatMoney(monthlyDelta)
+	if monthlyDelta > 0 {
+		formattedMonthlyDelta = "+" + formattedMonthlyDelta
 	}
-	formattedAfter := "-"
-	if hourlyAfter > 0 {
-		formattedAfter = "$" + strconv.FormatFloat(hourlyAfter, 'f', 3, 32)
-	}
-	formattedMonthlyDelta := "$" + strconv.FormatFloat(monthlyDelta, 'f', 3, 32)
 
 	pricing.tableData = append(pricing.tableData, []string{
-		res.Address,
-		res.Action,
+		formatAddress(res),
 		price.ServiceCode,
 		price.UsageOperation,
 		formattedBefore,
 		formattedAfter,
 		formattedMonthlyDelta,
 	})
+}
+
+func formatAddress(res Resource) string {
+	actionIcon := ""
+	switch res.Action {
+	case "create":
+		actionIcon = "+"
+	case "delete":
+		actionIcon = "-"
+	case "update":
+		actionIcon = "~"
+	default:
+	}
+
+	return actionIcon + " " + res.Address
 }
