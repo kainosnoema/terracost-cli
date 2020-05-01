@@ -1,4 +1,4 @@
-module github.com/kainosnoema/terracost/cli
+module github.com/kainosnoema/terracost-cli
 
 go 1.14
 

@@ -3,7 +3,7 @@ package prices
 import (
 	"fmt"
 
-	"github.com/kainosnoema/terracost/cli/terraform"
+	"github.com/kainosnoema/terracost-cli/terraform"
 )
 
 var rdsInstanceClassMap = map[string]string{

@@ -1,7 +1,7 @@
 package prices
 
 import (
-	"github.com/kainosnoema/terracost/cli/terraform"
+	"github.com/kainosnoema/terracost-cli/terraform"
 )
 
 // Difficult to compile an accurate list as there's no complete documentation.

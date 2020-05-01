@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/kainosnoema/terracost/cli/plan"
-	"github.com/kainosnoema/terracost/cli/terraform"
+	"github.com/kainosnoema/terracost-cli/plan"
+	"github.com/kainosnoema/terracost-cli/terraform"
 )
 
 func init() {

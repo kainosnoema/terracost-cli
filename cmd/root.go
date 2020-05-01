@@ -6,7 +6,7 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "terracost",
-	Short: "CLI for Terracost.",
+	Short: "AWS cost estimation for Terraform projects.",
 	Long:  "",
 }
 

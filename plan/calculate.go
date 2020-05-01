@@ -1,8 +1,8 @@
 package plan
 
 import (
-	"github.com/kainosnoema/terracost/cli/prices"
-	"github.com/kainosnoema/terracost/cli/terraform"
+	"github.com/kainosnoema/terracost-cli/prices"
+	"github.com/kainosnoema/terracost-cli/terraform"
 )
 
 // Resource maps a Terraform resource to AWS pricing

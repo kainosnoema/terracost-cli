@@ -9,7 +9,7 @@ import (
 	"github.com/mitchellh/colorstring"
 	"github.com/olekukonko/tablewriter"
 
-	"github.com/kainosnoema/terracost/cli/prices"
+	"github.com/kainosnoema/terracost-cli/prices"
 )
 
 var moneyMo = &accounting.Accounting{Symbol: "$", Precision: 2, Format: "%s%v/mo", FormatZero: "-"}
