@@ -12,9 +12,16 @@ AWS cost estimation for Terraform projects using a custom API hosted at terracos
 $ brew install kainosnoema/tap/terracost
 ```
 
-### Usage
+## Usage
 
 In Terraform project directory:
 ```
 $ terracost estimate [plan file]
 ```
+
+## Supported Terraform Resources
+
+* `aws_instance`
+* `aws_db_instance`
+
+_If a resource isn't supported, it will be listed as such in the output with a cost estimate of $0._
