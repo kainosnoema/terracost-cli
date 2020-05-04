@@ -23,6 +23,9 @@ changelog:
   filters:
     exclude:
     - '^test:'
+release:
+  draft: true
+  prerelease: true
 brews:
 - github:
     owner: kainosnoema
