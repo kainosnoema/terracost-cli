@@ -6,8 +6,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/kainosnoema/terracost-cli/terraform"
 )
+
+var initEC2Api = func(region string) ec2iface.EC2API {
+	return ec2.New(session.New(&aws.Config{Region: &region}))
+}
 
 func AWSInstance(region string, changes terraform.ChangeJSON) ChangesPriceIDs {
 	changesPriceIDs := ChangesPriceIDs{}
@@ -38,14 +43,13 @@ func ec2Instance(region string, changeAttrs map[string]interface{}) PriceID {
 
 // TODO: make a single API call for all AMIs
 func imageUsageOperation(region, ami string) string {
-	svc := ec2.New(session.New(&aws.Config{Region: &region}))
 	input := &ec2.DescribeImagesInput{
 		ImageIds: []*string{
 			aws.String(ami),
 		},
 	}
 
-	result, err := svc.DescribeImages(input)
+	result, err := initEC2Api(region).DescribeImages(input)
 	if err != nil {
 		fmt.Println(err.Error())
 		return "RunInstances"

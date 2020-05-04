@@ -15,10 +15,7 @@ type PlanJSON struct {
 
 type ResourceChangeJSON struct {
 	Address string
-	Mode    string
 	Type    string
-	Name    string
-	Index   int
 	Change  ChangeJSON
 }
 
