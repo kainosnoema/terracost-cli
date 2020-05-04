@@ -6,7 +6,7 @@ import (
 	"github.com/machinebox/graphql"
 )
 
-var apiURL = "http://localhost:3000/api/graphql"
+var apiURL = "https://terracost.io/api/graphql"
 var priceQueryGql = `query ($lookup: [PriceQuery!]) {
 	Prices(lookup: $lookup) {
 		ServiceCode
