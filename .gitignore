@@ -12,3 +12,6 @@
 *.out
 
 go.sum
+
+# Goreleaser output
+dist

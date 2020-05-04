@@ -1,0 +1,37 @@
+before:
+  hooks:
+    - go mod download
+builds:
+- env:
+  - CGO_ENABLED=0
+  binary: terracost
+  goos:
+      - linux
+      - darwin
+  goarch:
+    - amd64
+archives:
+- name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}'
+  replacements:
+    darwin: MacOS
+    linux: Linux
+    386: i386
+    amd64: x86_64
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^test:'
+brews:
+- github:
+    owner: kainosnoema
+    name: homebrew-tap
+  folder: Formula
+  name: terracost
+  description: AWS cost estimation for Terraform projects.
+  homepage: https://github.com/kainosnoema/terracost-cli
+  commit_author:
+    name: Evan Owen
+    email: kainosnoema@gmail.com
